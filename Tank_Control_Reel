@@ -1,0 +1,129 @@
+#include "esp_system.h"
+#include "Arduino.h"
+
+int period = 3000; 
+unsigned long time_trig = 0; 
+unsigned long currentTime = 0;
+
+int state_machine = 0; 
+int pin_state; 
+
+// Motor A
+#define motorAPin1 13 
+#define motorAPin2  12 
+
+// Motor B
+#define motorBPin1 25 
+#define motorBPin2 26 
+
+void setup() {
+  // sets the pins as outputs:
+  pinMode(motorAPin1, OUTPUT);
+  pinMode(motorAPin2, OUTPUT);
+
+  pinMode(motorBPin1, OUTPUT);
+  pinMode(motorBPin2, OUTPUT);
+  
+  Serial.begin(115200);
+
+  Serial.print("Testing DC Motor...");
+}
+
+void loop() {
+
+  
+   
+
+  while(millis() > (time_trig + period)){
+    state_machine++;
+    
+    if(state_machine>=7){
+      state_machine = 1; 
+    }
+
+    Serial.print("State machine is :");
+    Serial.print(state_machine);
+
+    switch (state_machine) {
+      case 1: 
+        Serial.print(" --  Moving Forward\n");
+        digitalWrite(motorAPin1, 1);
+        digitalWrite(motorAPin2, 0); 
+        digitalWrite(motorBPin1, 1);
+        digitalWrite(motorBPin2, 0); 
+        pin_state = digitalRead(motorAPin1);
+        Serial.print("PinA1 state is ");
+        Serial.print(pin_state);
+        Serial.print(" versus 1 expected.\n");
+        break; 
+
+      case 2:
+        Serial.print(" -- Motor stopped\n");
+        digitalWrite(motorAPin1, 1);        
+        digitalWrite(motorAPin2, 1);
+        digitalWrite(motorBPin1, 1);
+        digitalWrite(motorBPin2, 1);
+        pin_state = digitalRead(motorAPin1);
+        Serial.print("PinA1 state is ");
+        Serial.print(pin_state);
+        Serial.print(" versus 1 expected.\n");
+        break;
+
+      case 3:
+        Serial.print(" -- Motor backwards\n");
+        digitalWrite(motorAPin1, 0);
+        digitalWrite(motorAPin2, 1);
+        digitalWrite(motorBPin1, 0);
+        digitalWrite(motorBPin2, 1);
+        pin_state = digitalRead(motorAPin1);
+        Serial.print("PinA1 state is ");
+        Serial.print(pin_state);
+        Serial.print(" versus 0 expected.\n");
+        break;
+
+      case 4:
+          Serial.print(" -- Motor FULL STOP\n");
+          digitalWrite(motorAPin1, 0);
+          digitalWrite(motorAPin2, 0);
+          digitalWrite(motorBPin1, 0);
+          digitalWrite(motorBPin2, 0);
+          pin_state = digitalRead(motorAPin1);
+          Serial.print("PinA1 state is ");
+          Serial.print(pin_state); 
+          Serial.print(" versus 0 expected.\n");
+          break;
+      
+      case 5:
+          Serial.print(" -- SPIN ROUND\n");
+          digitalWrite(motorAPin1, 1);
+          digitalWrite(motorAPin2, 0);
+          digitalWrite(motorBPin1, 0);
+          digitalWrite(motorBPin2, 1);
+          pin_state = digitalRead(motorAPin1);
+          Serial.print("PinA1 state is ");
+          Serial.print(pin_state); 
+          Serial.print(" versus 0 expected.\n");
+          break;
+      
+       case 6:
+          Serial.print(" -- Motor FULL STOP\n");
+          digitalWrite(motorAPin1, 0);
+          digitalWrite(motorAPin2, 0);
+          digitalWrite(motorBPin1, 0);
+          digitalWrite(motorBPin2, 0);
+          pin_state = digitalRead(motorAPin1);
+          Serial.print("PinA1 state is ");
+          Serial.print(pin_state); 
+          Serial.print(" versus 0 expected.\n");
+          break;
+
+
+    } //end of state_machine SWITCH
+ 
+    time_trig = millis(); 
+  }  //end of while_millis
+
+
+} //end of main_loop
+
+
