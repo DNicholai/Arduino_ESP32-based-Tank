@@ -6,6 +6,6 @@ To-do List :
  
  - [x] L298N working (binary control logic)
  - [ ] 298N with fine motor control
- - [ ] ESP-NOW as a control scheme
+ - [x] ESP-NOW as a control scheme
  - [ ] ESP32Cam ?  
  
