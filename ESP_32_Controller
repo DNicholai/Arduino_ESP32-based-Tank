@@ -1,0 +1,280 @@
+/*
+  ESP-NOW RC Controller Code 
+  This code will CONTROL the RC tank on the human side
+  At present, it's working with keyboard controls driving an ESP32 in ESP-NOW
+*/
+
+#include <esp_now.h>
+#include <WiFi.h>
+
+char input; //character to accept input
+int t_delay = 2000; //time to go forward or backwards
+int turn_delay = 300; //less time for turning
+
+//  RECEIVER MAC Address -- TANK -- 1C:9D:C2:F9:1B:3C
+uint8_t broadcastAddress[] = {0x1C, 0x9D, 0xC2, 0xF9, 0x1B, 0x3C};
+
+// Structure example to send data
+// Must match the receiver structure
+typedef struct struct_message {
+  bool right_for;
+  bool right_back;
+  bool left_for;
+  bool left_back;
+} struct_message;
+
+// Create a struct_message called myData
+struct_message myData;
+
+esp_now_peer_info_t peerInfo;
+
+// callback when data is sent
+void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
+  Serial.print("\r\nLast Packet Send Status:\t");
+  Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
+}
+ 
+void setup() {
+  // Init Serial Monitor
+  Serial.begin(115200);
+ 
+  // Set device as a Wi-Fi Station
+  WiFi.mode(WIFI_STA);
+
+  // Init ESP-NOW
+  if (esp_now_init() != ESP_OK) {
+    Serial.println("Error initializing ESP-NOW");
+    return;
+  }
+
+  // Once ESPNow is successfully Init, we will register for Send CB to
+  // get the status of Trasnmitted packet
+  esp_now_register_send_cb(OnDataSent);
+  
+  // Register peer
+  memcpy(peerInfo.peer_addr, broadcastAddress, 6);
+  peerInfo.channel = 0;  
+  peerInfo.encrypt = false;
+  
+  // Add peer        
+  if (esp_now_add_peer(&peerInfo) != ESP_OK){
+    Serial.println("Failed to add peer");
+    return;
+  }
+  // Set DEFAULT values to send
+  myData.right_for = 0;
+  myData.right_back = 0;
+  myData.left_for = 0;
+  myData.left_back = 0;
+}
+ 
+void loop() {
+  if(Serial.available()){
+    input = Serial.read();
+    Serial.print("You typed: " );
+    Serial.println(input);
+
+    if(input =='f'){ //f is for FORWARD for t_delay ms --------------- Time to execute the order
+      Serial.println("sending a TEMPORARY FORWARD order.");
+      myData.right_for = 1;
+      myData.right_back = 0;
+      myData.left_for = 1;
+      myData.left_back = 0;
+      // Send message via ESP-NOW
+      esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData)); 
+      if (result == ESP_OK) {
+        Serial.println("Sent with success");
+      }
+      else {
+        Serial.println("Error sending the data");
+      }
+      delay(t_delay);
+      myData.right_for = 0;
+      myData.right_back = 0;
+      myData.left_for = 0;
+      myData.left_back = 0;
+      // Send message via ESP-NOW
+      result = esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData)); 
+      if (result == ESP_OK) {
+        Serial.println("Sent with success");
+      }
+      else {
+        Serial.println("Error sending the data");
+      }
+    }
+
+
+  if(input =='b'){ //b is for BACKWARDS for t_delay ms --------------- Time to execute the order
+      Serial.println("sending a TEMPORARY BACKWARDS order.");
+      myData.right_for = 0;
+      myData.right_back = 1;
+      myData.left_for = 0;
+      myData.left_back = 1;
+      // Send message via ESP-NOW
+      esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData)); 
+      if (result == ESP_OK) {
+        Serial.println("Sent with success");
+      }
+      else {
+        Serial.println("Error sending the data");
+      }
+      delay(t_delay);
+      myData.right_for = 0;
+      myData.right_back = 0;
+      myData.left_for = 0;
+      myData.left_back = 0;
+      // Send message via ESP-NOW
+      result = esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData)); 
+      if (result == ESP_OK) {
+        Serial.println("Sent with success");
+      }
+      else {
+        Serial.println("Error sending the data");
+      }
+    }
+
+  if(input =='r'){ //r is for RIGHT for turn_delay ms --------------- Time to execute the order
+      Serial.println("sending a RIGHT order.");
+      myData.right_for = 0;
+      myData.right_back = 1;
+      myData.left_for = 1;
+      myData.left_back = 0;
+      // Send message via ESP-NOW
+      esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData)); 
+      if (result == ESP_OK) {
+        Serial.println("Sent with success");
+      }
+      else {
+        Serial.println("Error sending the data");
+      }
+      delay(turn_delay);
+      myData.right_for = 0;
+      myData.right_back = 0;
+      myData.left_for = 0;
+      myData.left_back = 0;
+      // Send message via ESP-NOW
+      result = esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData)); 
+      if (result == ESP_OK) {
+        Serial.println("Sent with success");
+      }
+      else {
+        Serial.println("Error sending the data");
+      }
+    }
+
+  if(input =='l'){ //l is for LEFT for turn_delay ms --------------- Time to execute the order
+      Serial.println("sending a LEFT order.");
+      myData.right_for = 1;
+      myData.right_back = 0;
+      myData.left_for = 0;
+      myData.left_back = 1;
+      // Send message via ESP-NOW
+      esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData)); 
+      if (result == ESP_OK) {
+        Serial.println("Sent with success");
+      }
+      else {
+        Serial.println("Error sending the data");
+      }
+      delay(turn_delay);
+      myData.right_for = 0;
+      myData.right_back = 0;
+      myData.left_for = 0;
+      myData.left_back = 0;
+      // Send message via ESP-NOW
+      result = esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData)); 
+      if (result == ESP_OK) {
+        Serial.println("Sent with success");
+      }
+      else {
+        Serial.println("Error sending the data");
+      }
+    }
+
+
+  if(input =='F'){ //F is for FORWARD forever --------------- Time to execute the order
+      Serial.println("sending a FORWARD order.");
+      myData.right_for = 1;
+      myData.right_back = 0;
+      myData.left_for = 1;
+      myData.left_back = 0;
+      // Send message via ESP-NOW
+      esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData)); 
+      if (result == ESP_OK) {
+        Serial.println("Sent with success");
+      }
+      else {
+        Serial.println("Error sending the data");
+      }
+    } // End of the F input
+
+  if(input =='B'){ //B is for BACKWARDS forever --------------- Time to execute the order
+      Serial.println("sending a BACKWARD order.");
+      myData.right_for = 0;
+      myData.right_back = 1;
+      myData.left_for = 0;
+      myData.left_back = 1;
+      // Send message via ESP-NOW
+      esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData)); 
+      if (result == ESP_OK) {
+        Serial.println("Sent with success");
+      }
+      else {
+        Serial.println("Error sending the data");
+      }
+    } // End of the B input
+
+  if(input =='s' || input == 'S'){ //s is for STOP --------------- Time to execute the order
+      Serial.println("sending a STOP order.");
+      myData.right_for = 0;
+      myData.right_back = 0;
+      myData.left_for = 0;
+      myData.left_back = 0;
+      // Send message via ESP-NOW
+      esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData)); 
+      if (result == ESP_OK) {
+        Serial.println("Sent with success");
+      }
+      else {
+        Serial.println("Error sending the data");
+      }
+    } // End of the s input
+
+  if(input =='R'){ //r is for RIGHT FOREVER --------------- Time to execute the order
+      Serial.println("sending a RIGHT order.");
+      myData.right_for = 0;
+      myData.right_back = 1;
+      myData.left_for = 1;
+      myData.left_back = 0;
+      // Send message via ESP-NOW
+      esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData)); 
+      if (result == ESP_OK) {
+        Serial.println("Sent with success");
+      }
+      else {
+        Serial.println("Error sending the data");
+      }
+    } //End of RIGHT Loop
+
+    if(input =='L'){ //L is for LEFT FOREVER --------------- Time to execute the order
+      Serial.println("sending a RIGHT order.");
+      myData.right_for = 1;
+      myData.right_back = 0;
+      myData.left_for = 0;
+      myData.left_back = 1;
+      // Send message via ESP-NOW
+      esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData)); 
+      if (result == ESP_OK) {
+        Serial.println("Sent with success");
+      }
+      else {
+        Serial.println("Error sending the data");
+      }
+    } //End of LEFT Loop
+
+
+
+
+
+  } //End of the Serial_input loop
+}
